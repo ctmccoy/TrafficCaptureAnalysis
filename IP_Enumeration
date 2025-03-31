@@ -1,0 +1,126 @@
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.FileWriter;
+import java.util.HashMap;
+import java.util.Map;
+
+public class IP_enumerate {
+    public static void main(String[] args) {
+        String csvFile = "Dataset1.csv";
+        String line;
+        String csvSplitBy = ",";
+
+// frequency maps
+        Map<String, Integer> sourceIPfrequency = new HashMap<>();
+        Map<String, Integer> destinationIPfrequency = new HashMap<>();
+        Map<String, Integer> protocolIPfrequency = new HashMap<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
+            PrintWriter writer = new PrintWriter(new FileWriter("IPreport.txt"));
+            
+            String green = "\u001B[32m";
+            String white = "\u001B[97m";  //white
+            String reset = "\u001B[0m";
+            String toolHeader = green + "Custom IP Analysis Tool by: " + white + "Coner McCoy [ctmccoy]" + reset;
+            String fileHeader = green + "Report is Generated from: " + white + csvFile + reset;
+            
+            System.out.println(toolHeader);
+            writer.println("Custom IP Analysis Tool by: Coner McCoy [ctmccoy]");
+
+            System.out.println(fileHeader);
+            writer.println("Report is Generated from: " + csvFile);
+
+            System.out.println(); writer.println();
+
+            
+// read the header and find relevant columns
+            String headerLine = br.readLine();
+            String[] headers = headerLine.split(csvSplitBy);
+
+            int sourceIndex = -1;
+            int destIndex = -1;
+            int protocolIndex = -1;
+
+// search for column names
+            for (int i = 0; i < headers.length; i++) {
+                String col = headers[i].trim().toLowerCase();
+                if (col.contains("source")) sourceIndex = i;
+                else if (col.contains("destination")) destIndex = i;
+                else if (col.contains("protocol")) protocolIndex = i;
+            }
+
+// if any column is missing, exit the program
+            if (sourceIndex == -1 || destIndex == -1 || protocolIndex == -1) {
+                printLine("could not find required columns.", writer, "ERROR");
+                writer.close();
+                return;
+            }
+
+// process each line
+            while ((line = br.readLine()) != null) {
+                String[] row = line.split(csvSplitBy, -1); // include empty strings
+
+                if (row.length > Math.max(sourceIndex, Math.max(destIndex, protocolIndex))) {
+                    String sourceIP = row[sourceIndex].trim();
+                    String destIP = row[destIndex].trim();
+                    String protocol = row[protocolIndex].trim();
+
+                    sourceIPfrequency.put(sourceIP, sourceIPfrequency.getOrDefault(sourceIP, 0) + 1);
+                    destinationIPfrequency.put(destIP, destinationIPfrequency.getOrDefault(destIP, 0) + 1);
+                    protocolIPfrequency.put(protocol, protocolIPfrequency.getOrDefault(protocol, 0) + 1);
+                }
+            }
+
+// output results to both console and report file
+            topIPS("top 10 source IPs", sourceIPfrequency, writer);
+            topIPS("top 10 destination IPs", destinationIPfrequency, writer);
+            topIPS("top 10 protocol IPs", protocolIPfrequency, writer);
+
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("error reading csv: " + e.getMessage());
+        }
+    }
+
+// helper method to print a line to both console and file
+    private static void printLine(String text, PrintWriter writer, String sectionLabel) {
+        String colorReset = "\u001B[0m";
+        String color = "";
+
+        if (sectionLabel.contains("SOURCE")) color = "\u001B[36m";       //cyan
+        else if (sectionLabel.contains("DESTINATION")) color = "\u001B[34m"; //blue
+        else if (sectionLabel.contains("PROTOCOL")) color = "\u001B[33m";    //yellow
+        else if (sectionLabel.contains("HEADER")) color = "\u001B[32m";  //green
+
+        
+        System.out.println(color + text + colorReset);
+        writer.println(text);
+    }
+
+// helper method to print top 10 entries and total count
+    private static void topIPS(String title, Map<String, Integer> frequencyMap, PrintWriter writer) {
+        String rawLabel = title.toUpperCase().replace("TOP 10 ", "").trim();
+        String label = rawLabel.contains("PROTOCOL") ? "PROTOCOL IP ANALYSIS" : rawLabel.replace("IPS", "IP ANALYSIS");
+
+        
+        printLine("", writer, label);
+        printLine("========== " + label + " ==========", writer, label);
+        printLine("", writer, label);
+
+        printLine("total unique " + title.toLowerCase().replace("top 10 ", "") + ": " + frequencyMap.size(), writer, label);
+        printLine("", writer, label);
+        printLine(title, writer, label);
+        printLine("----------------------------------------", writer, label);
+
+        frequencyMap.entrySet().stream()
+            .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+            .limit(10)
+            .forEach(entry -> printLine(entry.getKey() + " | " + entry.getValue() + " ~ HITS", writer, label));
+
+        printLine("", writer, label);
+        printLine("", writer, label);
+    }
+}

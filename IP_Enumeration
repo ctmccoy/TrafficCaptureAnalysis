@@ -1,11 +1,12 @@
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.FileWriter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class IP_enumerate {
     public static void main(String[] args) {
@@ -13,56 +14,64 @@ public class IP_enumerate {
         String line;
         String csvSplitBy = ",";
 
-// frequency maps
         Map<String, Integer> sourceIPfrequency = new HashMap<>();
         Map<String, Integer> destinationIPfrequency = new HashMap<>();
         Map<String, Integer> protocolIPfrequency = new HashMap<>();
 
         try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
             PrintWriter writer = new PrintWriter(new FileWriter("IPreport.txt"));
-            
+
             String green = "\u001B[32m";
-            String white = "\u001B[97m";  //white
+            String white = "\u001B[97m";
             String reset = "\u001B[0m";
             String toolHeader = green + "Custom IP Analysis Tool by: " + white + "Coner McCoy [ctmccoy]" + reset;
             String fileHeader = green + "Report is Generated from: " + white + csvFile + reset;
-            
+
             System.out.println(toolHeader);
             writer.println("Custom IP Analysis Tool by: Coner McCoy [ctmccoy]");
 
             System.out.println(fileHeader);
             writer.println("Report is Generated from: " + csvFile);
-
             System.out.println(); writer.println();
 
-            
-// read the header and find relevant columns
+            // read the header and validate it
             String headerLine = br.readLine();
-            String[] headers = headerLine.split(csvSplitBy);
+            if (headerLine == null) {
+                System.out.println("❌ The CSV file is empty. Please provide a valid Dataset1.csv file.");
+                writer.close();
+                return;
+            }
 
+            String[] headers = headerLine.toLowerCase().split(csvSplitBy);
             int sourceIndex = -1;
             int destIndex = -1;
             int protocolIndex = -1;
 
-// search for column names
             for (int i = 0; i < headers.length; i++) {
-                String col = headers[i].trim().toLowerCase();
+                String col = headers[i].trim();
                 if (col.contains("source")) sourceIndex = i;
                 else if (col.contains("destination")) destIndex = i;
                 else if (col.contains("protocol")) protocolIndex = i;
             }
 
-// if any column is missing, exit the program
+            // show friendly message if columns are missing
+            boolean hasAllHeaders = true;
             if (sourceIndex == -1 || destIndex == -1 || protocolIndex == -1) {
-                printLine("could not find required columns.", writer, "ERROR");
+                hasAllHeaders = false;
+                String yellow = "\u001B[33m";
+                String reset = "\u001B[0m";
+                System.out.println(yellow + "⚠️ Your Dataset1.csv file is missing one or more required headers:" + reset);
+                if (sourceIndex == -1) System.out.println("   - Missing: source");
+                if (destIndex == -1) System.out.println("   - Missing: destination");
+                if (protocolIndex == -1) System.out.println("   - Missing: protocol");
+                System.out.println("\nPlease make sure your CSV contains the headers: Source, Destination, and Protocol.");
                 writer.close();
                 return;
             }
 
-// process each line
+            // process each line
             while ((line = br.readLine()) != null) {
                 String[] row = line.split(csvSplitBy, -1); // include empty strings
-
                 if (row.length > Math.max(sourceIndex, Math.max(destIndex, protocolIndex))) {
                     String sourceIP = row[sourceIndex].trim();
                     String destIP = row[destIndex].trim();
@@ -74,7 +83,7 @@ public class IP_enumerate {
                 }
             }
 
-// output results to both console and report file
+            // output results
             topIPS("top 10 source IPs", sourceIPfrequency, writer);
             topIPS("top 10 destination IPs", destinationIPfrequency, writer);
             topIPS("top 10 protocol IPs", protocolIPfrequency, writer);
@@ -85,31 +94,26 @@ public class IP_enumerate {
         }
     }
 
-// helper method to print a line to both console and file
     private static void printLine(String text, PrintWriter writer, String sectionLabel) {
         String colorReset = "\u001B[0m";
         String color = "";
 
-        if (sectionLabel.contains("SOURCE")) color = "\u001B[36m";       //cyan
-        else if (sectionLabel.contains("DESTINATION")) color = "\u001B[34m"; //blue
-        else if (sectionLabel.contains("PROTOCOL")) color = "\u001B[33m";    //yellow
-        else if (sectionLabel.contains("HEADER")) color = "\u001B[32m";  //green
+        if (sectionLabel.contains("SOURCE")) color = "\u001B[36m";       // cyan
+        else if (sectionLabel.contains("DESTINATION")) color = "\u001B[34m"; // blue
+        else if (sectionLabel.contains("PROTOCOL")) color = "\u001B[33m";    // yellow
+        else if (sectionLabel.contains("HEADER")) color = "\u001B[32m";      // green
 
-        
         System.out.println(color + text + colorReset);
         writer.println(text);
     }
 
-// helper method to print top 10 entries and total count
     private static void topIPS(String title, Map<String, Integer> frequencyMap, PrintWriter writer) {
         String rawLabel = title.toUpperCase().replace("TOP 10 ", "").trim();
         String label = rawLabel.contains("PROTOCOL") ? "PROTOCOL IP ANALYSIS" : rawLabel.replace("IPS", "IP ANALYSIS");
 
-        
         printLine("", writer, label);
         printLine("========== " + label + " ==========", writer, label);
         printLine("", writer, label);
-
         printLine("total unique " + title.toLowerCase().replace("top 10 ", "") + ": " + frequencyMap.size(), writer, label);
         printLine("", writer, label);
         printLine(title, writer, label);

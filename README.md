@@ -1,26 +1,24 @@
-## Step-By-Step Guide: Generate Your Own 📁 "Dataset1.csv" File.
-
+### GENERATE YOUR OWN 📁 "Dataset1.csv" 📁 FILE
 ---
+#### ☑️ 1: - Install Wireshark (if you don’t have it):
+#####   - https://www.wireshark.org/download.html
 
-### ☑️ 1: - Install Wireshark (if you don’t have it):
-####   - https://www.wireshark.org/download.html
-
-### ☑️ 2: - Capture Your Traffic:
+#### ☑️ 2: - Capture Your Traffic:
  - Open Wireshark.
  - Start capturing on your preferred interface (e.g., eth0, wlan0).
  - Let it run while you browse, ping, or generate traffic.
  - Stop the capture once you have enough data (a few hundred packets is fine).
 
-### ☑️ 3: - Export to CSV:
+#### ☑️ 3: - Export to CSV:
  - Go to File → Export Packet Dissections → As CSV
  - Choose Packet Summary Line as the export type
- - - Save the file as: 📁 "Dataset1.csv"
+ - - Save the file as: 📁 "Dataset1.csv" 📁
  - - Place it in the same folder as the Java program (TrafficCaptureAnalysis/).
 
-### ☑️ 4: - Run the Program Again:
+#### ☑️ 4: - Run the Program Again:
  - javac IP_enumerate.java
  - java IP_enumerate
 
 ---
 
-## ⚠️ Make sure the exported CSV contains the fields *`Source`*, *`Destination`*, and *`Protocol`*. These are case-insensitive but required for analysis. ⚠️
+### ⚠️ Make sure the exported CSV contains the fields *`Source`*, *`Destination`*, and *`Protocol`*. These are case-insensitive but required for analysis. ⚠️

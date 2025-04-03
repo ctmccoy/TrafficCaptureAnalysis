@@ -1,7 +1,6 @@
-🔄 Use Your Own Network Traffic (Optional)
- ####- You can replace the default Dataset1.csv with your own network capture:
+## Step-By-Step Guide: Generate Your Own 📁 "Dataset1.csv" File.
 
-## Step-by-Step: Generate Your Own 📁Dataset1.csv
+---
 
 ### ☑️ 1: - Install Wireshark (if you don’t have it):
 ####   - https://www.wireshark.org/download.html
@@ -22,4 +21,6 @@
  - javac IP_enumerate.java
  - java IP_enumerate
 
-## ⚠️ Make sure the exported CSV contains the fields Source, Destination, and Protocol. These are case-insensitive but required for analysis.
+---
+
+## ⚠️ Make sure the exported CSV contains the fields *`Source`*, *`Destination`*, and *`Protocol`*. These are case-insensitive but required for analysis. ⚠️
